@@ -1,0 +1,791 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Consulta de Documentos</title>
+
+<style>
+:root {
+    --azul: #192d46;
+    --fundo: #f4f6f9;
+    --borda: #e3e7ed;
+    --texto: #253247;
+    --cinza: #738094;
+}
+
+* {
+    box-sizing: border-box;
+}
+
+html {
+    scroll-behavior: smooth;
+}
+
+body {
+    margin: 0;
+    font-family: Arial, Helvetica, sans-serif;
+    background: var(--fundo);
+    color: var(--texto);
+    min-height: 100vh;
+}
+
+header {
+    background: var(--azul);
+    color: white;
+    padding: 28px 20px;
+    text-align: center;
+}
+
+header h1 {
+    margin: 0 0 8px;
+    font-size: 23px;
+}
+
+header p {
+    margin: 0;
+    color: #d2dce8;
+    font-size: 13px;
+}
+
+main {
+    max-width: 800px;
+    margin: 38px auto;
+    padding: 0 18px;
+}
+
+.documento {
+    background: white;
+    border: 1px solid var(--borda);
+    border-radius: 14px;
+    padding: 35px;
+    box-shadow: 0 10px 35px rgba(0,0,0,.045);
+}
+
+h2 {
+    font-size: clamp(21px, 3vw, 28px);
+    line-height: 1.35;
+    color: var(--azul);
+    margin: 0 0 8px;
+}
+
+.descricao {
+    font-size: 14px;
+    color: var(--cinza);
+    margin: 0 0 30px;
+}
+
+/* PDF */
+.visualizador-pdf {
+    display: block;
+    width: 100%;
+    height: min(75vh, 750px);
+    min-height: 420px;
+    border: 1px solid var(--borda);
+    border-radius: 9px;
+    background: #f0f2f5;
+}
+
+.abrir-pdf {
+    display: inline-block;
+    margin-top: 14px;
+    color: var(--azul);
+    font-weight: bold;
+    font-size: 14px;
+}
+
+/* CATEGORIAS */
+
+.categorias {
+    display: grid;
+    gap: 14px;
+}
+
+.categoria {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    gap: 18px;
+    text-align: left;
+    padding: 22px;
+    background: white;
+    border: 1px solid var(--borda);
+    border-radius: 12px;
+    cursor: pointer;
+    transition: .2s;
+}
+
+.categoria:hover {
+    background: #f0f4f9;
+    border-color: #aebed1;
+    transform: translateY(-2px);
+}
+
+.icone {
+    width: 54px;
+    height: 54px;
+    border-radius: 12px;
+    background: #edf2f8;
+    color: var(--azul);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.icone svg {
+    width: 27px;
+    height: 27px;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.8;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+
+.categoria-info {
+    flex: 1;
+}
+
+.categoria-info strong {
+    display: block;
+    font-size: 17px;
+    color: var(--azul);
+    margin-bottom: 5px;
+}
+
+.categoria-info small {
+    font-size: 13px;
+    color: var(--cinza);
+}
+
+.seta {
+    font-size: 22px;
+    color: var(--cinza);
+}
+
+/* VISUALIZAÇÃO */
+
+.voltar-categorias {
+    background: none;
+    border: none;
+    color: var(--azul);
+    font-size: 13px;
+    font-weight: bold;
+    padding: 0;
+    margin-bottom: 30px;
+    cursor: pointer;
+}
+
+.voltar-categorias:hover {
+    text-decoration: underline;
+}
+
+.progresso-topo {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 15px;
+    color: var(--cinza);
+    font-size: 12px;
+    font-weight: bold;
+    letter-spacing: .5px;
+}
+
+.barra {
+    height: 5px;
+    background: #e9edf2;
+    border-radius: 20px;
+    overflow: hidden;
+    margin: 16px 0 35px;
+}
+
+.barra-preenchimento {
+    height: 100%;
+    width: 0%;
+    background: var(--azul);
+    border-radius: 20px;
+    transition: width .3s ease;
+}
+
+.conteudo {
+    min-height: 180px;
+    line-height: 1.85;
+    font-size: 15px;
+}
+
+.conteudo p {
+    margin: 0 0 18px;
+    white-space: pre-line;
+    overflow-wrap: anywhere;
+}
+
+.conteudo img,
+.conteudo video {
+    display: block;
+    width: 100%;
+    max-height: 620px;
+    object-fit: contain;
+    border-radius: 9px;
+    background: #f0f2f5;
+}
+
+.conteudo video {
+    background: #10151d;
+}
+
+.navegacao {
+    display: flex;
+    justify-content: space-between;
+    gap: 14px;
+    padding-top: 28px;
+    margin-top: 35px;
+    border-top: 1px solid var(--borda);
+}
+
+.navegacao button {
+    padding: 13px 22px;
+    border: 1px solid var(--borda);
+    border-radius: 9px;
+    font-size: 14px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: background .2s, transform .2s;
+}
+
+.navegacao button:hover:not(:disabled) {
+    transform: translateY(-1px);
+}
+
+.anterior {
+    background: white;
+    color: var(--azul);
+}
+
+.anterior:hover:not(:disabled) {
+    background: #f0f3f7;
+}
+
+.proximo {
+    background: var(--azul);
+    border-color: var(--azul) !important;
+    color: white;
+}
+
+.proximo:hover:not(:disabled) {
+    background: #29486d;
+}
+
+button:disabled {
+    opacity: .35;
+    cursor: not-allowed;
+}
+
+[hidden] {
+    display: none !important;
+}
+
+footer {
+    text-align: center;
+    color: var(--cinza);
+    font-size: 12px;
+    padding: 0 20px 35px;
+}
+
+@media (max-width: 600px) {
+    header {
+        padding: 23px 15px;
+    }
+
+    main {
+        margin: 20px auto;
+        padding: 0 12px;
+    }
+
+    .documento {
+        padding: 22px 17px;
+        border-radius: 11px;
+    }
+
+    .categoria {
+        padding: 16px;
+        gap: 13px;
+    }
+
+    .icone {
+        width: 46px;
+        height: 46px;
+    }
+
+    .barra {
+        margin-bottom: 28px;
+    }
+
+    .conteudo {
+        min-height: 130px;
+    }
+
+    .navegacao {
+        gap: 10px;
+    }
+
+    .navegacao button {
+        padding: 13px 15px;
+        flex: 1;
+    }
+}
+</style>
+</head>
+
+<body>
+
+<header>
+    <h1>Consulta de Documentos</h1>
+    <p>Material disponibilizado para análise</p>
+</header>
+
+<main>
+
+<!-- PÁGINA INICIAL -->
+
+<section id="inicio" class="documento">
+
+    <h2>Selecione o material</h2>
+
+    <p class="descricao">
+        Escolha uma categoria para visualizar os documentos.
+    </p>
+
+    <div class="categorias">
+
+        <button class="categoria" onclick="abrirCategoria('texto')">
+
+            <span class="icone">
+                <svg viewBox="0 0 24 24">
+                    <path d="M7 3h7l5 5v13H7z"/>
+                    <path d="M14 3v5h5"/>
+                    <path d="M10 12h6M10 16h6"/>
+                </svg>
+            </span>
+
+            <span class="categoria-info">
+                <strong>Textos</strong>
+                <small id="totalTextos"></small>
+            </span>
+
+            <span class="seta">›</span>
+
+        </button>
+
+        <button class="categoria" onclick="abrirCategoria('imagem')">
+
+            <span class="icone">
+                <svg viewBox="0 0 24 24">
+                    <rect x="3" y="3" width="18" height="18" rx="2"/>
+                    <circle cx="8.5" cy="8.5" r="1.5"/>
+                    <path d="m21 15-5-5L5 21"/>
+                </svg>
+            </span>
+
+            <span class="categoria-info">
+                <strong>Imagens</strong>
+                <small id="totalImagens"></small>
+            </span>
+
+            <span class="seta">›</span>
+
+        </button>
+
+        <button class="categoria" onclick="abrirCategoria('video')">
+
+            <span class="icone">
+                <svg viewBox="0 0 24 24">
+                    <rect x="3" y="5" width="18" height="14" rx="2"/>
+                    <path d="m10 9 5 3-5 3z"/>
+                </svg>
+            </span>
+
+            <span class="categoria-info">
+                <strong>Vídeos</strong>
+                <small id="totalVideos"></small>
+            </span>
+
+            <span class="seta">›</span>
+
+        </button>
+
+    </div>
+
+</section>
+
+
+<!-- VISUALIZADOR -->
+
+<section id="visualizador" class="documento" hidden>
+
+    <button
+        class="voltar-categorias"
+        onclick="voltarCategorias()">
+        ← Voltar às categorias
+    </button>
+
+    <div class="progresso-topo">
+        <span id="contador"></span>
+        <span id="percentual"></span>
+    </div>
+
+    <div class="barra">
+        <div class="barra-preenchimento" id="barra"></div>
+    </div>
+
+    <h2 id="titulo"></h2>
+
+    <p class="descricao" id="descricao"></p>
+
+    <div class="conteudo" id="conteudo"></div>
+
+    <div class="navegacao">
+
+        <button
+            class="anterior"
+            id="anterior"
+            onclick="navegar(-1)">
+            ← Anterior
+        </button>
+
+        <button
+            class="proximo"
+            id="proximo"
+            onclick="navegar(1)">
+            Próximo →
+        </button>
+
+    </div>
+
+</section>
+
+</main>
+
+<footer>
+    Consulta documental — Material para análise
+</footer>
+
+<script>
+
+/*
+==================================================
+ MATERIAIS — MANTIDOS NA ORDEM ORIGINAL
+==================================================
+*/
+
+const materiais = [
+    {
+        titulo: "01 - Apresentação dos fatos",
+        descricao: "Relato inicial",
+        tipo: "pdf",
+        arquivo: "textos/relato01.pdf"
+    },
+    {
+        titulo: "02 - Primeiro registro fotográfico",
+        descricao: "Fotografia 01",
+        tipo: "imagem",
+        arquivo: "imagens/foto01.jpeg",
+        texto: "Descrição da primeira fotografia."
+    },
+    {
+        titulo: "03 - Segundo registro fotográfico",
+        descricao: "Fotografia 02",
+        tipo: "imagem",
+        arquivo: "imagens/foto02.jpeg",
+        texto: "Descrição da segunda fotografia."
+    },
+    {
+        titulo: "04 - Primeiro vídeo",
+        descricao: "Registro audiovisual 01",
+        tipo: "video",
+        arquivo: "videos/video01.mp4",
+        texto: "Descrição do primeiro vídeo."
+    },
+    {
+        titulo: "05 - Relato complementar",
+        descricao: "Segundo texto",
+        tipo: "pdf",
+        arquivo: "textos/relato02.pdf"
+    },
+    {
+        titulo: "06 - Terceiro registro fotográfico",
+        descricao: "Fotografia 03",
+        tipo: "imagem",
+        arquivo: "imagens/foto03.jpeg",
+        texto: "Descrição da terceira fotografia."
+    },
+    {
+        titulo: "07 - Segundo vídeo",
+        descricao: "Registro audiovisual 02",
+        tipo: "video",
+        arquivo: "videos/video02.mp4",
+        texto: "Descrição do segundo vídeo."
+    },
+    {
+        titulo: "08 - Quarto registro fotográfico",
+        descricao: "Fotografia 04",
+        tipo: "imagem",
+        arquivo: "imagens/foto04.jpeg",
+        texto: "Descrição da quarta fotografia."
+    },
+    {
+        titulo: "09 - Terceiro vídeo",
+        descricao: "Registro audiovisual 03",
+        tipo: "video",
+        arquivo: "videos/video03.mp4",
+        texto: "Descrição do terceiro vídeo."
+    },
+    {
+        titulo: "10 - Considerações finais",
+        descricao: "Terceiro texto",
+        tipo: "pdf",
+        arquivo: "textos/relato03.pdf"
+    }
+];
+
+
+/*
+==================================================
+ SISTEMA DE CATEGORIAS
+==================================================
+*/
+
+let categoriaAtual = "";
+let materiaisFiltrados = [];
+let atual = 0;
+
+const inicio = document.getElementById("inicio");
+const visualizador = document.getElementById("visualizador");
+
+const titulo = document.getElementById("titulo");
+const descricao = document.getElementById("descricao");
+const conteudo = document.getElementById("conteudo");
+
+const contador = document.getElementById("contador");
+const percentual = document.getElementById("percentual");
+const barra = document.getElementById("barra");
+
+const anterior = document.getElementById("anterior");
+const proximo = document.getElementById("proximo");
+
+
+/*
+==================================================
+ CONTAGEM DOS MATERIAIS
+==================================================
+*/
+
+function atualizarContadores() {
+
+    const textos = materiais.filter(
+        item => item.tipo === "texto" || item.tipo === "pdf"
+    ).length;
+
+    const imagens = materiais.filter(
+        item => item.tipo === "imagem"
+    ).length;
+
+    const videos = materiais.filter(
+        item => item.tipo === "video"
+    ).length;
+
+    document.getElementById("totalTextos").textContent =
+        `${textos} documentos disponíveis`;
+
+    document.getElementById("totalImagens").textContent =
+        `${imagens} imagens disponíveis`;
+
+    document.getElementById("totalVideos").textContent =
+        `${videos} vídeos disponíveis`;
+}
+
+
+/*
+==================================================
+ ABRIR CATEGORIA
+==================================================
+*/
+
+function abrirCategoria(tipo) {
+
+    categoriaAtual = tipo;
+
+    materiaisFiltrados = materiais.filter(
+        item => tipo === "texto"
+            ? item.tipo === "texto" || item.tipo === "pdf"
+            : item.tipo === tipo
+    );
+
+    if (materiaisFiltrados.length === 0) {
+        return;
+    }
+
+    atual = 0;
+
+    inicio.hidden = true;
+    visualizador.hidden = false;
+
+    mostrarDocumento();
+}
+
+
+/*
+==================================================
+ EXIBIR DOCUMENTO
+==================================================
+*/
+
+function mostrarDocumento() {
+
+    const material = materiaisFiltrados[atual];
+
+    if (!material) {
+        return;
+    }
+
+    titulo.textContent = material.titulo;
+    descricao.textContent = material.descricao || "";
+
+    // Remove o conteúdo anterior.
+    // Isso também interrompe vídeos em reprodução.
+    conteudo.replaceChildren();
+
+    if (material.texto) {
+
+        const p = document.createElement("p");
+
+        p.textContent = material.texto;
+
+        conteudo.appendChild(p);
+    }
+
+    if (material.tipo === "pdf") {
+
+        const quadro = document.createElement("iframe");
+        quadro.src = material.arquivo;
+        quadro.title = material.titulo;
+        quadro.className = "visualizador-pdf";
+        quadro.setAttribute("loading", "lazy");
+        conteudo.appendChild(quadro);
+
+        const abrirPDF = document.createElement("a");
+        abrirPDF.href = material.arquivo;
+        abrirPDF.target = "_blank";
+        abrirPDF.rel = "noopener noreferrer";
+        abrirPDF.className = "abrir-pdf";
+        abrirPDF.textContent = "Abrir PDF em outra aba ↗";
+        conteudo.appendChild(abrirPDF);
+    }
+
+    if (material.tipo === "imagem") {
+
+        const img = document.createElement("img");
+
+        img.src = material.arquivo;
+        img.alt = material.titulo;
+
+        conteudo.appendChild(img);
+    }
+
+    if (material.tipo === "video") {
+
+        const video = document.createElement("video");
+
+        video.src = material.arquivo;
+        video.controls = true;
+        video.preload = "metadata";
+        video.playsInline = true;
+
+        conteudo.appendChild(video);
+    }
+
+    const posicao = atual + 1;
+    const total = materiaisFiltrados.length;
+
+    const progresso = Math.round(
+        (posicao / total) * 100
+    );
+
+    contador.textContent =
+        `ITEM ${String(posicao).padStart(2, "0")} DE ${String(total).padStart(2, "0")}`;
+
+    percentual.textContent = progresso + "%";
+
+    barra.style.width = progresso + "%";
+
+    anterior.disabled = atual === 0;
+
+    proximo.disabled = atual === total - 1;
+
+    window.scrollTo({
+        top: 0,
+        behavior: "instant"
+    });
+}
+
+
+/*
+==================================================
+ ANTERIOR E PRÓXIMO
+==================================================
+*/
+
+function navegar(direcao) {
+
+    const novoIndice = atual + direcao;
+
+    if (
+        novoIndice >= 0 &&
+        novoIndice < materiaisFiltrados.length
+    ) {
+
+        atual = novoIndice;
+
+        mostrarDocumento();
+    }
+}
+
+
+/*
+==================================================
+ VOLTAR ÀS CATEGORIAS
+==================================================
+*/
+
+function voltarCategorias() {
+
+    // Interrompe qualquer vídeo em reprodução.
+    conteudo.replaceChildren();
+
+    visualizador.hidden = true;
+    inicio.hidden = false;
+
+    categoriaAtual = "";
+    materiaisFiltrados = [];
+    atual = 0;
+
+    window.scrollTo({
+        top: 0,
+        behavior: "instant"
+    });
+}
+
+
+/*
+==================================================
+ INICIALIZAÇÃO
+==================================================
+*/
+
+atualizarContadores();
+
+</script>
+
+</body>
+</html>
